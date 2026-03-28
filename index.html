@@ -458,12 +458,44 @@ document.getElementById('clearBtn').onclick = () => {
 };
 
 document.getElementById('copyBtn').onclick = () => {
-  navigator.clipboard.writeText(exportFavorites()).then(() => {
-    alert('コピーしました！\nClaudeに貼り付けてCalendar追加をお願いしてください');
-  }).catch(() => {
-    alert('コピー失敗...');
-  });
+  const text = exportFavorites();
+  
+  // 尝试现代API
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('コピーしました！\nClaudeに貼り付けてCalendar追加をお願いしてください');
+    }).catch(() => {
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
 };
+
+function fallbackCopy(text) {
+  // 旧方法：创建临时textarea
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  
+  try {
+    const success = document.execCommand('copy');
+    if (success) {
+      alert('コピーしました！\nClaudeに貼り付けてCalendar追加をお願いしてください');
+    } else {
+      alert('コピー失敗...\n手動でテキストを選択してコピーしてください');
+    }
+  } catch (err) {
+    alert('コピー失敗...\n手動でテキストを選択してコピーしてください');
+  }
+  
+  document.body.removeChild(textarea);
+}
 
 render();
 </script>
