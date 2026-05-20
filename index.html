@@ -136,7 +136,7 @@ const troupeColors = {
 };
 
 const troupes = ['花組', '月組', '雪組', '星組', '宙組', '一般'];
-const regions = ['関東', '関西', '中部', '九州', '全国'];
+const regions = ['関東', '関西', '中部', '九州', 'その他'];
 const months = ['2026-04','2026-05','2026-06','2026-07','2026-08','2026-09','2026-10','2026-11','2026-12','2027-01','2027-02'];
 const monthNames = {'2026-04':'4月','2026-05':'5月','2026-06':'6月','2026-07':'7月','2026-08':'8月','2026-09':'9月','2026-10':'10月','2026-11':'11月','2026-12':'12月','2027-01':'1月','2027-02':'2月'};
 const weekDays = ['日','月','火','水','木','金','土'];
@@ -208,9 +208,10 @@ function getShowsForDate(dateStr, favOnlyOverride = null) {
   performances.forEach(perf => {
     const troupe = perf.troupe || '一般';
     if (!selectedTroupes.includes(troupe)) return;
-    if (!selectedRegions.includes(perf.region)) return;
     if (dateStr < perf.startDate || dateStr > perf.endDate) return;
     const daySchedule = perf.schedule?.find(s => s.date === dateStr);
+    const effectiveRegion = daySchedule?.region || perf.region;
+    if (!selectedRegions.includes(effectiveRegion)) return;
     if (daySchedule?.note === '休演日') return;
     if (daySchedule && daySchedule.shows && daySchedule.shows.length > 0) {
       // 筛选模式：只显示有收藏的公演
@@ -297,10 +298,11 @@ function render() {
       onclick="toggleTroupe('${t}')">${t}</button>`;
   }).join('');
   
+  const allRegionsSelected = regions.every(r => selectedRegions.includes(r));
   document.getElementById('regionFilters').innerHTML = regions.map(r => {
     const active = selectedRegions.includes(r);
     return `<button class="region-btn ${active?'active':''}" onclick="toggleRegion('${r}')">${r}</button>`;
-  }).join('');
+  }).join('') + `<button class="region-btn ${allRegionsSelected?'active':''}" onclick="toggleAllRegions()">全国</button>`;
   
   document.getElementById('monthRow').innerHTML = months.map(m => {
     const active = selectedMonth === m;
@@ -428,6 +430,16 @@ function toggleRegion(r) {
     selectedRegions = selectedRegions.filter(x => x !== r);
   } else {
     selectedRegions.push(r);
+  }
+  render();
+}
+
+function toggleAllRegions() {
+  const allSelected = regions.every(r => selectedRegions.includes(r));
+  if (allSelected) {
+    selectedRegions = ['両方'];
+  } else {
+    selectedRegions = [...regions, '両方'];
   }
   render();
 }
