@@ -6084,7 +6084,8 @@
           }
         ]
       }
-    ]
+    ],
+    "region": "関東"
   },
   {
     "id": "yukigumi-ponoichizoku-tokyo-2026",
@@ -6666,7 +6667,8 @@
           }
         ]
       }
-    ]
+    ],
+    "region": "関西"
   },
   {
     "id": "tsukigumi-inazuma-kaat-2026",
@@ -6752,7 +6754,8 @@
           }
         ]
       }
-    ]
+    ],
+    "region": "関東"
   },
   {
     "id": "hanagumi-elisabeth-takarazuka-2026",
@@ -7148,7 +7151,8 @@
           }
         ]
       }
-    ]
+    ],
+    "region": "関西"
   },
   {
     "id": "soragumi-saikai-tour-2026",
@@ -7365,7 +7369,8 @@
         ],
         "venue": "熊本城ホール"
       }
-    ]
+    ],
+    "region": "全国"
   },
   {
     "id": "hoshigumi-rrr-tokyo-2026",
@@ -7830,6 +7835,7 @@
           }
         ]
       }
-    ]
+    ],
+    "region": "関東"
   }
 ]
