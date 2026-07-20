@@ -62,6 +62,13 @@
     .fav-btn:active { transform: scale(0.95); }
     .fav-btn.active { background: linear-gradient(135deg, #FFCC80, #FFB74D); color: #E65100; }
     .fav-btn.inactive { background: #f5f5f5; color: #aaa; }
+    .cast-btn { padding: 4px 10px; font-size: 0.72rem; cursor: pointer; border-radius: 6px; border: none; background: #ECEFF1; color: #607D8B; transition: all 0.15s; }
+    .cast-btn:active { transform: scale(0.95); }
+    .cast-btn.active { background: #CFD8DC; color: #37474F; }
+    .cast-detail { width: 100%; margin: 2px 0 6px; padding: 8px 10px; background: rgba(0,0,0,0.03); border-radius: 8px; }
+    .cast-detail-row { display: flex; gap: 8px; font-size: 0.72rem; padding: 2px 0; }
+    .cast-detail-role { color: #999; min-width: 88px; flex-shrink: 0; }
+    .cast-detail-name { color: #555; font-weight: 500; }
     .memo-input { margin-top: 6px; width: 100%; padding: 6px 8px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 0.72rem; font-family: inherit; }
     .memo-input::placeholder { color: #ccc; }
     .shinko { margin-top: 4px; color: #AD1457; font-size: 0.75rem; }
@@ -121,7 +128,7 @@
     <p class="empty">日付をタップすると<br>公演詳細が表示されます</p>
   </div>
   
-  <div class="footer">最終更新: 2026-05-21</div>
+  <div class="footer">最終更新: 2026-07-20</div>
 
 <script>
 let performances = [];
@@ -152,6 +159,7 @@ let selectedRegions = [...regions, '両方'];
 let favorites = {};
 let showFavList = false;
 let filterFavOnly = false;
+let expandedCasts = new Set();
 
 try {
   const saved = localStorage.getItem('kangeki-favorites-v3');
@@ -195,6 +203,15 @@ function updateMemo(key, memo) {
 
 function isFavorite(perfId, date, time) {
   return !!favorites[makeKey(perfId, date, time)];
+}
+
+function toggleCastExpand(key) {
+  if (expandedCasts.has(key)) {
+    expandedCasts.delete(key);
+  } else {
+    expandedCasts.add(key);
+  }
+  render();
 }
 
 function getFavorite(perfId, date, time) {
@@ -390,15 +407,36 @@ function render() {
           const titleEsc = escapeHtml(show.title);
           const venueEsc = escapeHtml(show.daySchedule?.venue || show.venue);
           const castEsc = escapeHtml(s.cast || '');
-          
+
+          // castRoles持ち（3役以上のWキャスト等）は折りたたみ、単一役の役替わり（例：エリザベートのルドルフ）はそのまま表示
+          const hasCastRoles = show.castRoles && show.castRoles.length > 0 && s.cast;
+          const castExpanded = expandedCasts.has(key);
+
+          let castInline = '';
+          let castToggle = '';
+          let castDetail = '';
+          if (s.cast && !hasCastRoles) {
+            castInline = `<span class="show-cast">${castEsc}</span>`;
+          } else if (hasCastRoles) {
+            castToggle = `<button class="cast-btn ${castExpanded?'active':''}" onclick="toggleCastExpand('${escapeHtml(key)}')">cast${castExpanded ? ' ▲' : ' ▼'}</button>`;
+            if (castExpanded) {
+              const names = s.cast.split('／');
+              const rows = show.castRoles.map((role, i) =>
+                `<div class="cast-detail-row"><span class="cast-detail-role">${escapeHtml(role)}</span><span class="cast-detail-name">${escapeHtml(names[i] || '')}</span></div>`
+              ).join('');
+              castDetail = `<div class="cast-detail">${rows}</div>`;
+            }
+          }
+
           return `<div class="show-time-row">
             <span>🎭 ${timeDisplay}</span>
             ${s.note ? `<span class="show-note">${escapeHtml(s.note)}</span>` : ''}
-            ${s.cast ? `<span class="show-cast">${castEsc}</span>` : ''}
+            ${castInline}
             <button class="fav-btn ${fav?'active':'inactive'}" onclick="toggleFavorite('${show.id}','${selectedDate}','${s.time || ''}','${titleEsc}','${venueEsc}','${castEsc}')">
               ${fav ? '♡' : '♡'}
             </button>
-          </div>${memoSection}`;
+            ${castToggle}
+          </div>${castDetail}${memoSection}`;
         }).join('') || '';
         
         const shinko = show.shinkoDate === selectedDate ? '<div class="shinko">⭐ 新人公演</div>' : '';
@@ -515,7 +553,7 @@ function fallbackCopy(text) {
 
 fetch('shows.json')
   .then(r => r.json())
-  .then(data => { performances = data; render(); })
+  .then(data => { performances = data.filter(p => p.id !== '_meta'); render(); })
   .catch(e => { console.error('Failed to load shows.json:', e); render(); });
 </script>
 </body>
